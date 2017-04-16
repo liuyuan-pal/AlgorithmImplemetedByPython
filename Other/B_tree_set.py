@@ -1,6 +1,14 @@
 
 M=30
-
+'''
+1. Empty entry produced by splitting will not be deleted, just marked as unused by h.m.
+[h.m:M] are un unsed entries.
+2. the children of k-th node (h.children[k].next) is in range: [h.children[k].key,h.children[k+1])
+Exception:
+    1) k=1 range: (MINIMUM_KEY,h.children[2].key)
+    2) k=h.m-1 range: [h.children[h.m-1].key,MAXIMUM_KEY)
+    
+'''
 class Node():
     def __init__(self,child_num=0):
         self.m=child_num                         # number of children
