@@ -1,0 +1,120 @@
+import sys
+
+class FlowEdge:
+    def __init__(self,v,w,cap):
+        self.v=v
+        self.w=w
+        self.capcity=cap
+        self.flow=0
+
+    def other(self,v):
+        if v == self.v:
+            return self.w
+        elif v == self.w:
+            return self.v
+        else:
+            raise SystemExit('Inconsistent Edge')
+
+    def residual_cap(self,n):
+        if n == self.v:
+            return self.flow
+        elif n==self.w:
+            return self.capcity-self.flow
+        else:
+            raise SystemExit('Inconsistent Edge')
+
+    def add_residual_flow(self,n,delta):
+        if n==self.v:
+            self.flow-=delta
+        elif n==self.w:
+            self.flow+=delta
+        else:
+            raise SystemExit('Inconsistent Edge')
+
+
+class FlowNetwork:
+    def __init__(self,V=None,In=None):
+
+        self.adj_v = []
+        self.V = 0
+        self.E = 0
+
+        if V is not None:
+            self.adj_v=[[] for _ in range(V)]
+            self.V=V
+
+        if In is not None:
+            lines=In.readlines()
+            self.V=int(lines[0])
+            self.adj_v=[[] for _ in range(self.V)]
+            self.E=int(lines[1])
+            for line in lines[2:]:
+                if len(line.strip())<=0:
+                    continue
+
+                v=int(line.strip().split()[0])
+                w=int(line.strip().split()[1])
+                cap=float(line.strip().split()[2])
+                edge=FlowEdge(v,w,cap)
+
+                self.add_edge(edge)
+
+    def add_edge(self,flow_edge):
+        self.adj_v[flow_edge.v].append(flow_edge)
+        self.adj_v[flow_edge.w].append(flow_edge)
+
+    def adj(self,v):
+        return self.adj_v[v]
+
+    def edges(self):
+        all_edges=[]
+        for edges in self.adj_v:
+            all_edges+=edges
+
+        return all_edges
+
+class FordFulkerson:
+    def __init__(self,G,s,t):
+        self.value=0
+        while(self.has_augmented_path(G,s,t)):
+            bottle=sys.float_info.max
+            v=t
+            while v!=s:
+                bottle=min(self.edge_to[v].residual_cap(v),bottle)
+                v=self.edge_to[v].other(v)
+
+            v=t
+            while v!=s:
+                self.edge_to[v].add_residual_flow(v,bottle)
+                v=self.edge_to[v].other(v)
+
+            self.value+=bottle
+
+
+    def has_augmented_path(self,G,s,t):
+        self.marked=[False for _ in range(G.V)]
+        self.edge_to=[None for _ in range(G.V)]
+        q=[]
+
+        self.marked[s]=True
+        q.append(s)
+        # bfs
+        while len(q)>0:
+            v=q.pop(0)
+            for e in G.adj(v):
+                w=e.other(v)
+                if e.residual_cap(w)>0 and not self.marked[w]:
+                    self.edge_to[w]=e
+                    self.marked[w]=True
+                    q.append(w)
+
+        return self.marked[t]
+
+
+if __name__ == "__main__":
+    with open('tinyFN.txt') as f:
+        FN=FlowNetwork(V=None,In=f)
+
+    ff=FordFulkerson(FN,0,5)
+    print ff.value
+
